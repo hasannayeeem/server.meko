@@ -35,6 +35,7 @@ async function run(){
         await client.connect();
         const productCollection = client.db('sobtool').collection('product');
         const userCollection = client.db('sobtool').collection('users');
+        const reviewCollection = client.db('sobtool').collection('reviews');
         
         const verifyAdmin = async (req, res, next) =>{
             const requester = req.decoded.email;
@@ -54,6 +55,14 @@ async function run(){
             const cursor = productCollection.find(query);
             const products = await cursor.toArray();
             res.send(products);
+        });
+
+        // all reviews api
+        app.get('/reviews', async (req, res) => {
+            const query = {};
+            const cursor = reviewCollection.find(query);
+            const reviews = await cursor.toArray();
+            res.send(reviews);
         });
         // single product api 
         app.get('/products/:id', async (req, res) => {
@@ -108,10 +117,16 @@ async function run(){
 
         });
 
-        //POST
+        //POST product api
         app.post('/products', async (req, res) => {
             const newProduct = req.body;
             const result = await productCollection.insertOne(newProduct);
+            res.send(result)
+        });
+        //POST review api
+        app.post('/reviews', async (req, res) => {
+            const newReview = req.body;
+            const result = await reviewCollection.insertOne(newReview);
             res.send(result)
         });
 
