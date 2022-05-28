@@ -70,6 +70,13 @@ async function run(){
             const products = await cursor.toArray();
             res.send(products);
         });
+        // all order api
+        app.get('/allorder', async (req, res) => {
+            const query = {};
+            const cursor = orderCollection.find(query);
+            const orders = await cursor.toArray();
+            res.send(orders);
+        });
 
         // all reviews api
         app.get('/reviews', async (req, res) => {
@@ -154,6 +161,7 @@ async function run(){
             res.send(order);
         })
 
+        // single order post api 
         app.post('/order', async (req, res) => {
             const order = req.body; 
             const result = await orderCollection.insertOne(order);
