@@ -36,6 +36,8 @@ async function run(){
         const productCollection = client.db('sobtool').collection('product');
         const userCollection = client.db('sobtool').collection('users');
         const reviewCollection = client.db('sobtool').collection('reviews');
+        const orderCollection = client.db('sobtool').collection('orders');
+        const paymentCollection = client.db('sobtool').collection('payment');
         
         const verifyAdmin = async (req, res, next) =>{
             const requester = req.decoded.email;
@@ -114,6 +116,22 @@ async function run(){
             // else{
             //     res.status(403).send({message: 'forbidden'});
             // }
+
+        });
+
+        app.get('/orders', verifyJWT, async (req, res) => {
+            const customer = req.query.customer;
+            // const authorization = req.headers.authorization;
+            // console.log('auth header', authHeader);
+            const decodedEmail = req.decoded.email;
+            if (customer === decodedEmail) {
+                const query = { customer: customer };
+                const orders = await orderCollection.find(query).toArray();
+                return res.send(orders);
+            }
+            else {
+                return res.status(403).send({ message: 'Forbidden access' });
+            }
 
         });
 
