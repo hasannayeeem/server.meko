@@ -12,6 +12,7 @@ const port = process.env.PORT || 1010
 app.use(cors());
 app.use(express.json());
 
+// verifyJWT 
 const verifyJWT = (req, res, next) => {
     const authHeader = req.headers.authorization;
     if (!authHeader) {
@@ -40,6 +41,7 @@ async function run(){
         const orderCollection = client.db('sobtool').collection('orders');
         const paymentCollection = client.db('sobtool').collection('payment');
         
+        // verifyadmin 
         const verifyAdmin = async (req, res, next) =>{
             const requester = req.decoded.email;
             const requesterAccount = await userCollection.findOne({ email: requester });
@@ -70,6 +72,14 @@ async function run(){
             const products = await cursor.toArray();
             res.send(products);
         });
+        // single product api 
+        app.get('/products/:id', async (req, res) => {
+            const id = req.params.id;
+            const query = {_id: ObjectId(id)};
+            const product = await productCollection.findOne(query);
+            res.send(product);
+        });
+
         // all order api
         app.get('/allorder', async (req, res) => {
             const query = {};
@@ -85,31 +95,37 @@ async function run(){
             const reviews = await cursor.toArray();
             res.send(reviews);
         });
-        // single product api 
-        app.get('/products/:id', async (req, res) => {
-            const id = req.params.id;
-            const query = {_id: ObjectId(id)};
-            const product = await productCollection.findOne(query);
-            res.send(product);
-        });
-        // all users api 
+        // all users api (forAdmin) 
         app.get('/user', verifyJWT, async (req, res) => {
             const users = await userCollection.find().toArray();
             res.send(users);
         });
-
+        // // single user api 
+        // app.get('/user/:id', verifyJWT, async (req, res) => {
+        //     const id = req.params.id;
+        //     const query = {_id: ObjectId(id)};
+        //     const user = await userCollection.findOne(query);
+        //     res.send(user);
+        // });
+        // update or post new user api 
         app.put('/user/:email', async (req, res) => {
             const email = req.params.email;
             const user = req.body;
-            const filter = { email: email };
+            const filter = { email: email, address: 'example' };
             const options = { upsert: true };
             const updateDoc = {
                 $set: user,
             };
             const result = await userCollection.updateOne(filter, updateDoc, options);
             const token = jwt.sign({ email: email }, process.env.ACCESS_TOKEN_SECRET, { expiresIn: '1d' })
-
-            res.send({ result, token });
+             res.send({ result, token });
+        });
+        // get user api 
+        app.get('/user/:email',  async (req, res) => {
+            const email = req.params.email;
+            const query = {email: email};
+            const user = await userCollection.findOne(query);
+            res.send(user);
         });
 
         app.get('/admin/:email', async (req, res) =>{
@@ -119,29 +135,19 @@ async function run(){
             res.send({admin: isAdmin})
         });
 
+        // make admin api for admin
         app.put('/user/admin/:email', verifyJWT, verifyAdmin, async (req, res) => {
             const email = req.params.email;
-            // const requester = req.decoded.email;
-            // const requesterAccount = await userCollection.findOne({ email: requester });
-            // if (requesterAccount.role === 'admin') {
                 const filter = { email: email };
                 const updateDoc = {
                     $set: { role: 'admin' },
                 };
                 const result = await userCollection.updateOne(filter, updateDoc);
-
-                res.send({ result });
-            // }
-            // else{
-            //     res.status(403).send({message: 'forbidden'});
-            // }
-
+                res.send(result);
         });
 
-        app.get('/orders', verifyJWT, async (req, res) => {
+        app.get('/orders', verifyJWT,  async (req, res) => {
             const customer = req.query.customer;
-            // const authorization = req.headers.authorization;
-            // console.log('auth header', authHeader);
             const decodedEmail = req.decoded.email;
             if (customer === decodedEmail) {
                 const query = { customer: customer };
@@ -151,7 +157,6 @@ async function run(){
             else {
                 return res.status(403).send({ message: 'Forbidden access' });
             }
-
         });
 
         app.get('/orders/:id', verifyJWT, async (req, res) =>{
@@ -159,7 +164,14 @@ async function run(){
             const query = {_id: ObjectId(id)};
             const order = await orderCollection.findOne(query);
             res.send(order);
-        })
+        });
+
+        app.delete('/orders/:id',  async (req, res) =>{
+            const id = req.params.id;
+            const query = {_id: ObjectId(id)};
+            const order = await orderCollection.deleteOne(query);
+            res.send(order);
+        });
 
         // single order post api 
         app.post('/order', async (req, res) => {
