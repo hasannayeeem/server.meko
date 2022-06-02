@@ -53,7 +53,7 @@ async function run(){
             }
         }
         
-        app.post('/create-payment-intent', verifyJWT, async (req, res) =>{
+        app.post('/create-payment-intent', async (req, res) =>{
             const service = req.body;
             const price = service.price;
             const amount = price * 100;
@@ -108,10 +108,10 @@ async function run(){
         //     res.send(user);
         // });
         // update or post new user api 
-        app.put('/user/:email', async (req, res) => {
+        app.put('/user/:email',  async (req, res) => {
             const email = req.params.email;
             const user = req.body;
-            const filter = { email: email, address: 'example' };
+            const filter = { email: email};
             const options = { upsert: true };
             const updateDoc = {
                 $set: user,
@@ -121,7 +121,7 @@ async function run(){
              res.send({ result, token });
         });
         // get user api 
-        app.get('/user/:email',  async (req, res) => {
+        app.get('/user/:email', async (req, res) => {
             const email = req.params.email;
             const query = {email: email};
             const user = await userCollection.findOne(query);
@@ -136,7 +136,7 @@ async function run(){
         });
 
         // make admin api for admin
-        app.put('/user/admin/:email', verifyJWT, verifyAdmin, async (req, res) => {
+        app.put('/user/admin/:email', verifyAdmin, async (req, res) => {
             const email = req.params.email;
                 const filter = { email: email };
                 const updateDoc = {
@@ -146,7 +146,7 @@ async function run(){
                 res.send(result);
         });
 
-        app.get('/orders', verifyJWT,  async (req, res) => {
+        app.get('/orders',   async (req, res) => {
             const customer = req.query.customer;
             const decodedEmail = req.decoded.email;
             if (customer === decodedEmail) {
@@ -159,18 +159,27 @@ async function run(){
             }
         });
 
-        app.get('/orders/:id', verifyJWT, async (req, res) =>{
+        app.get('/orders/:id',  verifyJWT, async (req, res) =>{
             const id = req.params.id;
             const query = {_id: ObjectId(id)};
             const order = await orderCollection.findOne(query);
             res.send(order);
         });
-
+        
+        // delete order api for user 
         app.delete('/orders/:id',  async (req, res) =>{
             const id = req.params.id;
             const query = {_id: ObjectId(id)};
             const order = await orderCollection.deleteOne(query);
             res.send(order);
+        });
+
+        // delete user api for admin 
+        app.delete('/users/:id',  async (req, res) =>{
+            const id = req.params.id;
+            const query = {_id: ObjectId(id)};
+            const user = await userCollection.deleteOne(query);
+            res.send(user);
         });
 
         // single order post api 
@@ -180,6 +189,7 @@ async function run(){
             return res.send({ success: true, result });
         });
 
+        // update order api for user payment 
         app.patch('/orders/:id', verifyJWT, async (req, res) =>{
             const id = req.params.id;
             const payment = req.body;
@@ -191,7 +201,7 @@ async function run(){
                 }
             }
             const result = await paymentCollection.insertOne(payment);
-            const updatedOrders = await ordersCollection.updateOne(filter, updateDoc);
+            const updatedOrders = await orderCollection.updateOne(filter, updateDoc);
             res.send(updateDoc);
         });
 
