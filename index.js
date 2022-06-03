@@ -9,7 +9,7 @@ const port = process.env.PORT || 1010
 
 
 // middleware
-app.use(cors({origin: 'https://sobtool.web.app/'}));
+app.use(cors({origin: true, optionsSuccessStatus: 200, credentials: true}));
 app.use(express.json());
 
 // verifyJWT 
