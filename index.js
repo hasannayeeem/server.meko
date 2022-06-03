@@ -53,7 +53,7 @@ async function run(){
             }
         }
         
-        app.post('/create-payment-intent', async (req, res) =>{
+        app.post('/create-payment-intent', verifyJWT, async (req, res) =>{
             const service = req.body;
             const price = service.price;
             const amount = price * 100;
@@ -159,7 +159,7 @@ async function run(){
             }
         });
 
-        app.get('/orders/:id',  verifyJWT, async (req, res) =>{
+        app.get('/orders/:id',  async (req, res) =>{
             const id = req.params.id;
             const query = {_id: ObjectId(id)};
             const order = await orderCollection.findOne(query);
