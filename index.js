@@ -51,6 +51,8 @@ async function run(){
         const reviewCollection = client.db('sobtool').collection('reviews');
         const orderCollection = client.db('sobtool').collection('orders');
         const paymentCollection = client.db('sobtool').collection('payment');
+        const hasaimCollection = client.db('sobtool').collection('hasaim');
+        const sadikurCollection = client.db('sobtool').collection('sadikur');
         
         // verifyadmin 
         const verifyAdmin = async (req, res, next) =>{
@@ -82,6 +84,20 @@ async function run(){
             const cursor = productCollection.find(query);
             const products = await cursor.toArray();
             res.send(products);
+        });
+        // all hasaims api
+        app.get('/hasaims', async (req, res) => {
+            const query = {};
+            const cursor = hasaimCollection.find(query);
+            const hasaims = await cursor.toArray();
+            res.send(hasaims);
+        });
+        // sadikur api 
+        app.get('/sadikurs', async (req, res) => {
+            const query = {};
+            const cursor = sadikurCollection.find(query);
+            const sadikurs = await cursor.toArray();
+            res.send(sadikurs);
         });
         // single product api 
         app.get('/products/:id', async (req, res) => {
@@ -199,6 +215,9 @@ async function run(){
             const result = await orderCollection.insertOne(order);
             return res.send({ success: true, result });
         });
+
+        
+
 
         // update order api for user payment 
         app.patch('/orders/:id', verifyJWT, async (req, res) =>{
